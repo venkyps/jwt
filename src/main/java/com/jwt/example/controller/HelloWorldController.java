@@ -1,7 +1,10 @@
 package com.jwt.example.controller;
 
+import com.jwt.example.util.CompletableFutureUtility;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -9,9 +12,16 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Hello", description = "Hello World")
 public class HelloWorldController {
 
+    @Autowired
+    CompletableFutureUtility completableFutureUtility;
+
+    @Value("${message}")
+    private String value;
+
     @GetMapping("/helloWorld")
     @Operation(summary = "hello world", description = "hello world")
     public String helloWorld() {
-        return "Hello World";
+        completableFutureUtility.log(value);
+        return value;
     }
 }
