@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .build();
     }
 
-    @Bean
+   /* @Bean
     public UserDetailsService userDetailsService() {
         return new InMemoryUserDetailsManager(
                 User.withUsername("user")
@@ -56,5 +56,5 @@ public class SecurityConfig {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         return new ProviderManager(List.of(provider));
-    }
+    }*/
 }
