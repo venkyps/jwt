@@ -51,4 +51,10 @@ public class AuthController {
     public ResponseEntity<UserDTO> getUser(@RequestParam String userName) {
         return ResponseEntity.ok(userService.findByUsername(userName));
     }
+
+    @GetMapping("/getUserById")
+    @Operation(summary = "getUserById", description = "retrieves user details by userID")
+    public ResponseEntity<UserDTO> getUserById(@RequestParam String userID) {
+        return ResponseEntity.ok(userService.findByUserID(userID));
+    }
 }
