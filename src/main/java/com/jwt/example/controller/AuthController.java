@@ -48,8 +48,14 @@ public class AuthController {
 
     @GetMapping("/getUser")
     @Operation(summary = "getUser", description = "retrieves user details")
-    public ResponseEntity<UserDTO> getUser(@RequestParam String userName) {
-        return ResponseEntity.ok(userService.findByUsername(userName));
+    //public ResponseEntity<UserDTO> getUser(@RequestParam String userName) throws Exception{
+    public ResponseEntity<UserDTO> getUser(@RequestParam String userName){
+        UserDTO userDTO = userService.findByUsername(userName);
+        //if (null != userDTO) {
+            return ResponseEntity.ok(userService.findByUsername(userName));
+        //} /*else {
+            //throw new Exception("User not available");
+       // }*/
     }
 
     @GetMapping("/getUserById")
