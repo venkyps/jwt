@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 @Service
 @Slf4j
@@ -23,6 +26,9 @@ public class UserService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private ExecutorService virtualThreadExecutor;
 
     public UserDTO save(UserDTO userDTO) {
         User user = convertToDTO(userDTO);
@@ -46,6 +52,27 @@ public class UserService {
             return modelMapper.map(user, UserDTO.class);
         }
         return null;
+    }
+
+    public UserDTO findByUsernameUsingVirtualThread(String username) {
+        try {
+            Future<UserDTO> future = virtualThreadExecutor.submit(() -> {
+                log.info("Retrieve the data from DB for {}", username);
+                User user = userRepository.findByUsername(username);
+                if (user != null) {
+                    return modelMapper.map(user, UserDTO.class);
+                }
+                return null;
+            });
+
+            return future.get(); // Blocking call
+
+        } catch (InterruptedException | ExecutionException e) {
+            // Log and handle exception properly
+            log.error("Error retrieving user by username", e);
+            Thread.currentThread().interrupt(); // Reset interrupt status
+            return null;
+        }
     }
 
     @Transactional

@@ -38,6 +38,13 @@ public class AuthController {
         throw new RuntimeException("Invalid credentials");
     }
 
+    @PostMapping("/findByUserName")
+    @Operation(summary = "findByUserName", description = "find by user name")
+    public ResponseEntity<UserDTO> findByUserName(@RequestParam String userName) {
+        UserDTO userDTO = userService.findByUsernameUsingVirtualThread(userName);
+        return ResponseEntity.ok(userDTO);
+    }
+
     private void saveORUpdate(UserDTO userDTO, UserDTO userDTOExists) {
         if (Objects.isNull(userDTOExists)) {
             userService.save(userDTO);
