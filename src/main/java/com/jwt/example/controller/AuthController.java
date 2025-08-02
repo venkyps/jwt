@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Objects;
-
 @Tag(name = "Date API", description = "Auth login")
 @RestController
 @RequestMapping("/auth")
@@ -32,37 +30,25 @@ public class AuthController {
     public ResponseEntity<String> login(@RequestBody UserDTO userDTO) {
         if ("user".equals(userDTO.getUsername()) && "pass".equals(userDTO.getPassword())) {
             UserDTO userDTOExists = userService.findByUsername(userDTO.getUsername());
-            saveORUpdate(userDTO, userDTOExists);
+            userService.saveORUpdate(userDTO, userDTOExists);
             return ResponseEntity.ok(jwtUtil.generateToken(userDTO.getUsername()));
         }
         throw new RuntimeException("Invalid credentials");
     }
 
     @PostMapping("/findByUserName")
-    @Operation(summary = "findByUserName", description = "find by user name")
+    @Operation(summary = "findByUserName", description = "find by user name using virtual thread implementation")
     public ResponseEntity<UserDTO> findByUserName(@RequestParam String userName) {
         UserDTO userDTO = userService.findByUsernameUsingVirtualThread(userName);
         return ResponseEntity.ok(userDTO);
     }
 
-    private void saveORUpdate(UserDTO userDTO, UserDTO userDTOExists) {
-        if (Objects.isNull(userDTOExists)) {
-            userService.save(userDTO);
-        } else {
-            userService.update(userDTO);
-        }
-    }
 
     @GetMapping("/getUser")
     @Operation(summary = "getUser", description = "retrieves user details")
-    //public ResponseEntity<UserDTO> getUser(@RequestParam String userName) throws Exception{
-    public ResponseEntity<UserDTO> getUser(@RequestParam String userName){
+    public ResponseEntity<UserDTO> getUser(@RequestParam String userName) {
         UserDTO userDTO = userService.findByUsername(userName);
-        //if (null != userDTO) {
-            return ResponseEntity.ok(userService.findByUsername(userName));
-        //} /*else {
-            //throw new Exception("User not available");
-       // }*/
+        return ResponseEntity.ok(userService.findByUsername(userName));
     }
 
     @GetMapping("/getUserById")

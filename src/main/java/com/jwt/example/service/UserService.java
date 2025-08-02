@@ -1,16 +1,23 @@
 package com.jwt.example.service;
 
 
+import com.jwt.example.entity.Audit;
 import com.jwt.example.entity.User;
 import com.jwt.example.model.UserDTO;
+import com.jwt.example.repository.AuditRepository;
 import com.jwt.example.repository.UserRepository;
-import jakarta.transaction.Transactional;
+
+
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -25,6 +32,9 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
+    private AuditRepository auditRepository;
+
+    @Autowired
     private ModelMapper modelMapper;
 
     @Autowired
@@ -35,13 +45,33 @@ public class UserService {
         return save(user);
     }
 
+    public void saveORUpdate(UserDTO userDTO, UserDTO userDTOExists) {
+        if (Objects.isNull(userDTOExists)) {
+            save(userDTO);
+        } else {
+            update(userDTO);
+        }
+    }
+
     public UserDTO update(UserDTO userDTO) {
         User user = convertToDTO(userDTO);
         return updateUser(user);
     }
 
+    @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.READ_COMMITTED)
     private UserDTO updateUser(User user) {
-        return modelMapper.map(userRepository.updateDate(user.getUsername()), UserDTO.class);
+        UserDTO userDTO = modelMapper.map(userRepository.updateDate(user.getUsername()), UserDTO.class);
+        Audit audit = Audit.builder().userName(user.getUsername()).build();
+        auditRepository.save(audit);
+        return userDTO;
+    }
+
+    @Transactional(propagation=Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
+    private UserDTO save(User user) {
+        UserDTO userDTO = modelMapper.map(userRepository.save(user), UserDTO.class);
+        Audit audit = Audit.builder().userName(userDTO.getUsername()).build();
+        auditRepository.save(audit);
+        return userDTO;
     }
 
     @Cacheable(value = "userCache", key = "#username")
@@ -75,6 +105,13 @@ public class UserService {
         }
     }
 
+    /**
+     * Check the first level cache
+     *
+     * @param userID
+     * @return
+     */
+
     @Transactional
     public UserDTO findByUserID(String userID) {
         log.info("retreive the data from DB first time {}", userID);
@@ -92,9 +129,7 @@ public class UserService {
         return modelMapper.map(userDTO, User.class);
     }
 
-    private UserDTO save(User user) {
-        return modelMapper.map(userRepository.save(user), UserDTO.class);
-    }
+
 
 
 }
