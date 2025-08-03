@@ -1,6 +1,7 @@
 package com.jwt.example.controller;
 
 
+import com.jwt.example.model.ProductDTO;
 import com.jwt.example.model.UserDTO;
 import com.jwt.example.service.UserService;
 import com.jwt.example.util.JwtUtil;
@@ -55,5 +56,11 @@ public class AuthController {
     @Operation(summary = "getUserById", description = "retrieves user details by userID")
     public ResponseEntity<UserDTO> getUserById(@RequestParam String userID) {
         return ResponseEntity.ok(userService.findByUserID(userID));
+    }
+
+    @PostMapping("/addProduct")
+    @Operation(summary = "addProduct", description = "add a new product")
+    public ResponseEntity<ProductDTO> addProduct(@RequestBody ProductDTO productDTO) {
+        return ResponseEntity.ok(userService.addProduct(productDTO));
     }
 }

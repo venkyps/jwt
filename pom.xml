@@ -28,7 +28,7 @@
     </scm>
     <properties>
         <java.version>21</java.version>
-        <spring.boot.version>3.2.4</spring.boot.version>
+        <!--<spring.boot.version>3.2.4</spring.boot.version>-->
         <jjwt.version>0.11.5</jjwt.version>
         <caffeine.version>3.1.8</caffeine.version>
     </properties>
@@ -123,8 +123,6 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-
-
     </dependencies>
 
     <build>
@@ -137,8 +135,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>19</source>
-                    <target>19</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
         </plugins>

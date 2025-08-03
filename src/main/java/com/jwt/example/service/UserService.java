@@ -2,12 +2,14 @@ package com.jwt.example.service;
 
 
 import com.jwt.example.entity.Audit;
+import com.jwt.example.entity.Product;
 import com.jwt.example.entity.User;
+import com.jwt.example.model.ProductDTO;
 import com.jwt.example.model.UserDTO;
 import com.jwt.example.repository.AuditRepository;
+import com.jwt.example.repository.ProductRepository;
 import com.jwt.example.repository.UserRepository;
-
-
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,15 @@ public class UserService {
     private ModelMapper modelMapper;
 
     @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private HttpServletRequest httpServletRequest;
+
+    @Autowired
     private ExecutorService virtualThreadExecutor;
+
+    public static final String USER_NAME = "userName";
 
     public UserDTO save(UserDTO userDTO) {
         User user = convertToDTO(userDTO);
@@ -58,19 +68,23 @@ public class UserService {
         return updateUser(user);
     }
 
-    @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.READ_COMMITTED)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED)
     private UserDTO updateUser(User user) {
+
         UserDTO userDTO = modelMapper.map(userRepository.updateDate(user.getUsername()), UserDTO.class);
-        Audit audit = Audit.builder().userName(user.getUsername()).build();
-        auditRepository.save(audit);
+        Audit audit = Audit.builder().userName(user.getUsername())
+                .functionName("update").build();
+
+        saveAudit(audit);
         return userDTO;
     }
 
-    @Transactional(propagation=Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
     private UserDTO save(User user) {
         UserDTO userDTO = modelMapper.map(userRepository.save(user), UserDTO.class);
-        Audit audit = Audit.builder().userName(userDTO.getUsername()).build();
-        auditRepository.save(audit);
+        Audit audit = Audit.builder().userName(userDTO.getUsername())
+                 .functionName("save").build();
+        saveAudit(audit);
         return userDTO;
     }
 
@@ -82,6 +96,52 @@ public class UserService {
             return modelMapper.map(user, UserDTO.class);
         }
         return null;
+    }
+
+    /**
+     * propogation levels
+     * 1.Required >> join existing transactions or create new one if not exits
+     * 2.Required_new >> Always create new transactions
+     * 3.Mandatory >> Require existing transaction Else it will throw exception
+     * 4.Never >> Ensure method will not run with transaction, if it founds throws exception
+     * 5.Not supported >> Execute without transactions. if found it wil suspend the transactions
+     * 6.supports >> supports if any active transactions. if not execute without transaction
+     * 7.Nester >> execute within nested transactions.allowing nested transactions to rollback with out affectingxc
+     * @param productDTO
+     * @return
+     */
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public ProductDTO addProduct(ProductDTO productDTO) {
+        log.info("Inside add product method {}", productDTO);
+
+        Product product = modelMapper.map(productDTO, Product.class);
+        Optional<Product> productOptional = productRepository.findById(productDTO.getId());
+
+        if (productOptional.isPresent()) {
+            Product productDB = productOptional.get();
+            Audit audit = Audit.builder().userName(httpServletRequest.getHeader(USER_NAME))
+                    .functionName("Stock already exists")
+                    .build();
+            productDB.setQuantity(product.getQuantity()+1);
+            productRepository.save(productDB);
+            saveAudit(audit);
+        } else {
+            log.info("Persist product in DB {}", productDTO);
+            product.setId(null);
+            productRepository.save(product);
+            Audit audit = Audit.builder().userName(httpServletRequest.getHeader(USER_NAME))
+                    .functionName("Stock add")
+                    .build();
+            saveAudit(audit);
+        }
+        return productDTO;
+    }
+
+    @Transactional(propagation = Propagation.NESTED)
+    private Audit saveAudit(Audit audit) {
+        //throw new RuntimeException("Exception");
+        return auditRepository.save(audit);
     }
 
     public UserDTO findByUsernameUsingVirtualThread(String username) {

@@ -3,7 +3,7 @@ package com.jwt.example.configuration;
 import com.jwt.example.util.JwtUtil;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 @Component
+@Order(1)
 public class JwtFilter implements Filter {
 
     private final JwtUtil jwtUtil;
@@ -32,6 +33,7 @@ public class JwtFilter implements Filter {
 
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.extractUsername(token);
+                request.setAttribute("userName",username);
                 var auth = new UsernamePasswordAuthenticationToken(username, null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }

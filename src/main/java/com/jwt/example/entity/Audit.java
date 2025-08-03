@@ -23,6 +23,9 @@ public class Audit extends Auditable implements Serializable{
     @Column
     private String userName;
 
+    @Column
+    private String functionName;
+
     @Version
     @Column(nullable = false)
     private Integer version;
