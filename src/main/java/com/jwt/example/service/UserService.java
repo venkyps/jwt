@@ -79,6 +79,13 @@ public class UserService {
         return userDTO;
     }
 
+    /**
+     * Isolation.REPEATABLE_READ
+     * By creating a snapshot at the beginning of the transaction always keeps same value
+     * @param user
+     * @return
+     */
+
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
     private UserDTO save(User user) {
         UserDTO userDTO = modelMapper.map(userRepository.save(user), UserDTO.class);
