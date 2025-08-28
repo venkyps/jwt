@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Date API", description = "Auth login")
+@Tag(name = "Login API", description = "Auth login")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
