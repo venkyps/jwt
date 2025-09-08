@@ -1,5 +1,6 @@
 package com.jwt.example.controller;
 
+import com.jwt.example.service.HelloFeignClient;
 import com.jwt.example.util.CompletableFutureUtility;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,10 +19,13 @@ public class HelloWorldController {
     @Value("${message}")
     private String value;
 
+    @Autowired
+    private HelloFeignClient helloFeignClient;
+
     @GetMapping("/helloWorld")
     @Operation(summary = "hello world", description = "hello world")
     public String helloWorld() {
         completableFutureUtility.log(value);
-        return value;
+        return helloFeignClient.sayHello().getBody();
     }
 }
